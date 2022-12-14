@@ -1,12 +1,13 @@
-function isUsedByFormCreate(context, node) {
+function findFormCreate(context, node) {
   const name = node?.id?.name || node?.parent?.id?.name;
   const variable = context.getDeclaredVariables(node)?.find((x) => x.name === name);
   if (variable?.references?.length !== 1) {
     return false;
   }
   // @ts-ignore
-  const callee = variable?.references[0]?.identifier?.parent?.callee?.callee;
-  return callee?.object?.name === "Form" && callee?.property?.name === "create";
+  const call = variable?.references[0]?.identifier?.parent;
+  const callee = call?.callee?.callee;
+  return callee?.object?.name === "Form" && callee?.property?.name === "create" ? call : undefined;
 }
 
 /** @type {import('eslint').Rule.RuleModule} */
@@ -17,11 +18,7 @@ const rule = {
   create(context) {
     return {
       "FunctionDeclaration, ArrowFunctionExpression"(node) {
-        if (!isUsedByFormCreate(context, node)) {
-          return;
-        }
-        const form = node?.params?.[0]?.properties?.find((x) => x?.key?.name === "form");
-        if (!form) {
+        if (!findFormCreate(context, node)) {
           return;
         }
 
@@ -29,44 +26,46 @@ const rule = {
         let shouldReport = false;
         let addUseForm = false;
         let objectPatternText = "";
-        for (const x of node?.params?.[0]?.properties || []) {
-          if (x?.key?.name !== "form") {
+        for (const p of node?.params?.[0]?.properties || []) {
+          if (p?.key?.name !== "form") {
             continue;
           }
           shouldReport = true;
-          if (form?.value?.name === "form") {
+          if (p?.value?.name === "form") {
             addUseForm = true;
-            removes.push(form);
-            const nextToken = context.getSourceCode().getTokenAfter(form);
+            removes.push(p);
+            const nextToken = context.getSourceCode().getTokenAfter(p);
             if (nextToken.value === ",") {
               removes.push(nextToken);
             }
           }
-          if (form?.value?.type === "ObjectPattern") {
+          if (p?.value?.type === "ObjectPattern") {
             addUseForm = true;
-            removes.push(form);
-            const nextToken = context.getSourceCode().getTokenAfter(form);
+            removes.push(p);
+            const nextToken = context.getSourceCode().getTokenAfter(p);
             if (nextToken.value === ",") {
               removes.push(nextToken);
             }
-            objectPatternText = context.getSourceCode().getText(form.value);
+            objectPatternText = context.getSourceCode().getText(p.value);
           }
         }
 
         context.report({
-          node: form,
-          message: "Should not have `form` at function params",
+          node: node.params[0],
+          message: "Should not have `form` at props",
           fix(fixer) {
             if (node.body?.type !== "BlockStatement") {
               return;
             }
+            const functionStart = context.getSourceCode().getFirstToken(node.body);
             const fixes = [
               ...removes.map((r) => fixer.remove(r)),
               fixer.insertTextAfter(
-                context.getSourceCode().getFirstToken(node.body),
+                functionStart,
                 (addUseForm ? "\nconst [form] = Form.useForm();\n" : "") +
                   (objectPatternText ? `\nconst ${objectPatternText} = form;\n` : "")
               ),
+              fixer.remove(findFormCreate(context, node).callee),
             ];
             return fixes;
           },

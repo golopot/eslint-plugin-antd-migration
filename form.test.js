@@ -12,68 +12,68 @@ const ruleTester = new RuleTester({
 });
 
 const message = "Should upgrade getFieldDecorator to antd@4";
-const formMessage = "Should not have `form` at function params";
+const formMessage = "Should not have `form` at props";
 
 ruleTester.run("form", rule, {
   valid: [],
   invalid: [
     {
       code: `
-        function Foo({form, a}) {}
-        export default Form.create()(Foo)
-      `,
+            function Foo({form, a}) {}
+            export default Form.create()(Foo)
+          `,
       output: `
-        function Foo({ a}) {
+            function Foo({ a}) {
 const [form] = Form.useForm();
 }
-        export default Form.create()(Foo)
-      `,
+            export default (Foo)
+          `,
       errors: [
         {
           message: formMessage,
-          type: "Property",
+          type: "ObjectPattern",
         },
       ],
     },
     {
       code: `
-        function Foo({form: {a,b}}) {}
-        export default Form.create()(Foo)
-      `,
+            function Foo({form: {a,b}}) {}
+            export default Form.create()(Foo)
+          `,
       output: `
-        function Foo({}) {
+            function Foo({}) {
 const [form] = Form.useForm();
 
 const {a,b} = form;
 }
-        export default Form.create()(Foo)
-      `,
+            export default (Foo)
+          `,
       errors: [
         {
           message: formMessage,
-          type: "Property",
+          type: "ObjectPattern",
         },
       ],
     },
     {
       code: `
-        function Foo({form: {a,b}}) {
-          const [form] = Form.useForm();
+        function Foo({form, form: {a,b}}) {
         }
         export default Form.create()(Foo)
       `,
       output: `
-        function Foo({}) {
-          const [form] = Form.useForm();
+        function Foo({ }) {
+const [form] = Form.useForm();
+
 const {a,b} = form;
 
         }
-        export default Form.create()(Foo)
+        export default (Foo)
       `,
       errors: [
         {
           message: formMessage,
-          type: "Property",
+          type: "ObjectPattern",
         },
       ],
     },
