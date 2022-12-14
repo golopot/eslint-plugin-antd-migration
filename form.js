@@ -17,53 +17,59 @@ const rule = {
   create(context) {
     return {
       "FunctionDeclaration, ArrowFunctionExpression"(node) {
+        if (!isUsedByFormCreate(context, node)) {
+          return;
+        }
         const form = node?.params?.[0]?.properties?.find((x) => x?.key?.name === "form");
         if (!form) {
           return;
         }
-        if (!isUsedByFormCreate(context, node)) {
-          return;
-        }
-        /** @type {import('eslint').Rule.ReportFixer} */
-        let fix;
-        if (form?.key?.name === "form" && form?.value?.name === "form") {
-          const nextToken = context.getSourceCode().getTokenAfter(form);
-          if (node.body?.type === "BlockStatement") {
-            fix = (fixer) => {
-              return [
-                fixer.remove(form),
-                ...(nextToken.value === "," ? [fixer.remove(nextToken)] : []),
-                fixer.insertTextAfter(
-                  context.getSourceCode().getFirstToken(node.body),
-                  "\nconst [form] = Form.useForm();\n"
-                ),
-              ];
-            };
+
+        const removes = [];
+        let shouldReport = false;
+        let addUseForm = false;
+        let objectPatternText = "";
+        for (const x of node?.params?.[0]?.properties || []) {
+          if (x?.key?.name !== "form") {
+            continue;
           }
-        }
-
-        if (form?.key?.name === "form" && form?.value?.type === "ObjectPattern") {
-          const nextToken = context.getSourceCode().getTokenAfter(form);
-          const objectPatternText = context.getSourceCode().getText(form.value);
-          const formDeclaration = node.body?.body?.find(
-            (x) => x.declarations?.[0]?.id?.elements?.[0]?.name === "form"
-          );
-
-          if (node.body?.type === "BlockStatement" && formDeclaration) {
-            fix = (fixer) => {
-              return [
-                fixer.remove(form),
-                ...(nextToken.value === "," ? [fixer.remove(nextToken)] : []),
-                fixer.insertTextAfter(formDeclaration, `\nconst ${objectPatternText} = form;\n`),
-              ];
-            };
+          shouldReport = true;
+          if (form?.value?.name === "form") {
+            addUseForm = true;
+            removes.push(form);
+            const nextToken = context.getSourceCode().getTokenAfter(form);
+            if (nextToken.value === ",") {
+              removes.push(nextToken);
+            }
+          }
+          if (form?.value?.type === "ObjectPattern") {
+            addUseForm = true;
+            removes.push(form);
+            const nextToken = context.getSourceCode().getTokenAfter(form);
+            if (nextToken.value === ",") {
+              removes.push(nextToken);
+            }
+            objectPatternText = context.getSourceCode().getText(form.value);
           }
         }
 
         context.report({
           node: form,
           message: "Should not have `form` at function params",
-          fix,
+          fix(fixer) {
+            if (node.body?.type !== "BlockStatement") {
+              return;
+            }
+            const fixes = [
+              ...removes.map((r) => fixer.remove(r)),
+              fixer.insertTextAfter(
+                context.getSourceCode().getFirstToken(node.body),
+                (addUseForm ? "\nconst [form] = Form.useForm();\n" : "") +
+                  (objectPatternText ? `\nconst ${objectPatternText} = form;\n` : "")
+              ),
+            ];
+            return fixes;
+          },
         });
       },
 

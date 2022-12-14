@@ -40,6 +40,14 @@ const [form] = Form.useForm();
         function Foo({form: {a,b}}) {}
         export default Form.create()(Foo)
       `,
+      output: `
+        function Foo({}) {
+const [form] = Form.useForm();
+
+const {a,b} = form;
+}
+        export default Form.create()(Foo)
+      `,
       errors: [
         {
           message: formMessage,
