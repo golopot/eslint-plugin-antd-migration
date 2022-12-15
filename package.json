@@ -1,13 +1,13 @@
 {
   "name": "eslint-plugin-antd-migration",
   "version": "1.0.0",
-  "description": "",
+  "description": "fix antd@3 form to antd@4 form",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "mocha form.test.js"
   },
-  "author": "",
-  "license": "ISC",
+  "author": "Chiawen Chen<golopot@gmail.com>",
+  "license": "MIT",
   "devDependencies": {
     "@types/eslint": "^8.4.10",
     "eslint": "^8.29.0",
