@@ -1,3 +1,8 @@
+/**
+ * @param {import('eslint').Rule.RuleContext} context
+ * @param {*} node
+ * @returns
+ */
 function findFormCreate(context, node) {
   const name = node?.id?.name || node?.parent?.id?.name;
   const variable = context.getDeclaredVariables(node)?.find((x) => x.name === name);
@@ -10,6 +15,40 @@ function findFormCreate(context, node) {
   return callee?.object?.name === "Form" && callee?.property?.name === "create" ? call : undefined;
 }
 
+/**
+ * @param {import('eslint').Rule.RuleContext} context
+ * @param {*} node
+ * @returns
+ */
+function removeProperty(context, node) {
+  const nextToken = context.getSourceCode().getTokenAfter(node);
+  if (nextToken.value === ",") {
+    return [node, nextToken];
+  }
+  return [node];
+}
+
+/**
+ * @param {import('eslint').Rule.RuleContext} context
+ * @param {*} node
+ * @returns
+ */
+function handleFunctionParamEmptyPattern(context, node) {
+  if (
+    node?.params?.length === 1 &&
+    node?.params[0]?.type === "ObjectPattern" &&
+    node?.params[0]?.properties?.length === 0
+  ) {
+    context.report({
+      node: node?.params[0],
+      message: "remove empty pattern",
+      fix(fixer) {
+        return fixer.remove(node.params[0]);
+      },
+    });
+  }
+}
+
 /** @type {import('eslint').Rule.RuleModule} */
 const rule = {
   meta: {
@@ -18,6 +57,7 @@ const rule = {
   create(context) {
     return {
       "FunctionDeclaration, ArrowFunctionExpression"(node) {
+        handleFunctionParamEmptyPattern(context, node);
         if (!findFormCreate(context, node)) {
           return;
         }
@@ -33,19 +73,11 @@ const rule = {
           shouldReport = true;
           if (p?.value?.name === "form") {
             addUseForm = true;
-            removes.push(p);
-            const nextToken = context.getSourceCode().getTokenAfter(p);
-            if (nextToken.value === ",") {
-              removes.push(nextToken);
-            }
+            removes.push(...removeProperty(context, p));
           }
           if (p?.value?.type === "ObjectPattern") {
             addUseForm = true;
-            removes.push(p);
-            const nextToken = context.getSourceCode().getTokenAfter(p);
-            if (nextToken.value === ",") {
-              removes.push(nextToken);
-            }
+            removes.push(...removeProperty(context, p));
             objectPatternText = context.getSourceCode().getText(p.value);
           }
         }
@@ -62,14 +94,42 @@ const rule = {
               ...removes.map((r) => fixer.remove(r)),
               fixer.insertTextAfter(
                 functionStart,
-                (addUseForm ? "\nconst [form] = Form.useForm();\n" : "") +
-                  (objectPatternText ? `\nconst ${objectPatternText} = form;\n` : "")
+                (addUseForm ? "\nconst [form] = Form.useForm();" : "") +
+                  (objectPatternText ? `const ${objectPatternText} = form;` : "")
               ),
               fixer.remove(findFormCreate(context, node).callee),
             ];
             return fixes;
           },
         });
+      },
+
+      ObjectPattern(node) {
+        // @ts-ignore
+        if (node.parent?.init?.name === "form") {
+          for (const p of node.properties) {
+            // @ts-ignore
+            if (p.key?.name === "getFieldDecorator" && p.value?.name === "getFieldDecorator") {
+              context.report({
+                node: p,
+                message: "remove getFieldDecorator",
+                fix(fixer) {
+                  return removeProperty(context, p).map((x) => fixer.remove(x));
+                },
+              });
+            }
+          }
+
+          if (node.properties.length === 0 && node.parent.parent.type === "VariableDeclaration") {
+            context.report({
+              node: node.parent.parent,
+              message: "remove empty form destrucutring",
+              fix(fixer) {
+                return fixer.remove(node.parent.parent);
+              },
+            });
+          }
+        }
       },
 
       JSXElement(node) {

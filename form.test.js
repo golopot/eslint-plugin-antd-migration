@@ -19,15 +19,14 @@ ruleTester.run("form", rule, {
   invalid: [
     {
       code: `
-            function Foo({form, a}) {}
-            export default Form.create()(Foo)
-          `,
+function Foo({form, a}) {}
+export default Form.create()(Foo)
+`,
       output: `
-            function Foo({ a}) {
-const [form] = Form.useForm();
-}
-            export default (Foo)
-          `,
+function Foo({ a}) {
+const [form] = Form.useForm();}
+export default (Foo)
+`,
       errors: [
         {
           message: formMessage,
@@ -37,17 +36,14 @@ const [form] = Form.useForm();
     },
     {
       code: `
-            function Foo({form: {a,b}}) {}
-            export default Form.create()(Foo)
-          `,
+function Foo({form: {a,b}}) {}
+export default Form.create()(Foo)
+`,
       output: `
-            function Foo({}) {
-const [form] = Form.useForm();
-
-const {a,b} = form;
-}
-            export default (Foo)
-          `,
+function Foo({}) {
+const [form] = Form.useForm();const {a,b} = form;}
+export default (Foo)
+`,
       errors: [
         {
           message: formMessage,
@@ -57,19 +53,14 @@ const {a,b} = form;
     },
     {
       code: `
-        function Foo({form, form: {a,b}}) {
-        }
-        export default Form.create()(Foo)
-      `,
+function Foo({form, form: {a,b}}) {}
+export default Form.create()(Foo)
+`,
       output: `
-        function Foo({ }) {
-const [form] = Form.useForm();
-
-const {a,b} = form;
-
-        }
-        export default (Foo)
-      `,
+function Foo({ }) {
+const [form] = Form.useForm();const {a,b} = form;}
+export default (Foo)
+`,
       errors: [
         {
           message: formMessage,
@@ -134,6 +125,58 @@ const {a,b} = form;
         {
           message,
           type: "JSXElement",
+        },
+      ],
+    },
+    {
+      code: `
+        const { getFieldDecorator, getFieldValue } = form;
+      `,
+      output: `
+        const {  getFieldValue } = form;
+      `,
+      errors: [
+        {
+          message: "remove getFieldDecorator",
+          type: "Property",
+        },
+      ],
+    },
+    {
+      code: `
+        const { getFieldDecorator } = form;
+      `,
+      output: `
+        const {  } = form;
+      `,
+      errors: [
+        {
+          message: "remove getFieldDecorator",
+          type: "Property",
+        },
+      ],
+    },
+    {
+      code: `
+const {  } = form;
+      `,
+      output: `
+
+      `,
+      errors: [
+        {
+          message: "remove empty form destrucutring",
+          type: "VariableDeclaration",
+        },
+      ],
+    },
+    {
+      code: `function f({}) {}`,
+      output: `function f() {}`,
+      errors: [
+        {
+          message: "remove empty pattern",
+          type: "ObjectPattern",
         },
       ],
     },
