@@ -4,13 +4,19 @@
  * @returns
  */
 function findFormCreate(context, node) {
-  const name = node?.id?.name || node?.parent?.id?.name;
-  const variable = context.getDeclaredVariables(node)?.find((x) => x.name === name);
-  if (variable?.references?.length !== 1) {
-    return false;
+  let name;
+  let variable;
+  if (node.type === "FunctionDeclaration") {
+    name = node?.id?.name;
+    variable = context.getDeclaredVariables(node)?.find((x) => x.name === name);
+  } else if (node.type === "ArrowFunctionExpression") {
+    name = node?.parent?.id?.name;
+    variable = context.getDeclaredVariables(node.parent)?.find((x) => x.name === name);
   }
   // @ts-ignore
-  const call = variable?.references[0]?.identifier?.parent;
+  const ref = variable?.references?.find((x) => x.identifier?.parent?.type === "CallExpression");
+  // @ts-ignore
+  const call = ref?.identifier?.parent;
   const callee = call?.callee?.callee;
   return callee?.object?.name === "Form" && callee?.property?.name === "create" ? call : undefined;
 }

@@ -19,6 +19,23 @@ ruleTester.run("form", rule, {
   invalid: [
     {
       code: `
+const Foo = ({form}) => {}
+export default Form.create()(Foo)
+`,
+      output: `
+const Foo = ({}) => {
+const [form] = Form.useForm();}
+export default (Foo)
+`,
+      errors: [
+        {
+          message: formMessage,
+          type: "ObjectPattern",
+        },
+      ],
+    },
+    {
+      code: `
 function Foo({form, a}) {}
 export default Form.create()(Foo)
 `,
