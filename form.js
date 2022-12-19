@@ -21,6 +21,10 @@ function findFormCreate(context, node) {
   return callee?.object?.name === "Form" && callee?.property?.name === "create" ? call : undefined;
 }
 
+function isWhitespaceJSXText(node) {
+  return node.type === "JSXText" && String(node.value).trim() === "";
+}
+
 /**
  * @param {import('eslint').Rule.RuleContext} context
  * @param {*} node
@@ -139,14 +143,14 @@ const rule = {
       },
 
       JSXElement(node) {
-        const container = node.children?.find((x) => x.type === "JSXExpressionContainer");
+        const container = node.children?.find(
+          (x) =>
+            x.type === "JSXExpressionContainer" &&
+            x.expression.callee?.callee?.name === "getFieldDecorator"
+        );
         if (!container) {
           return;
         }
-        if (container.expression.callee?.callee?.name !== "getFieldDecorator") {
-          return;
-        }
-
         function getNameText(node) {
           if (node?.type === "Literal" && typeof node?.value === "string") {
             return context.getSourceCode().getText(node);
@@ -157,6 +161,9 @@ const rule = {
           message: "Should upgrade getFieldDecorator to antd@4",
           node,
           fix(fixer) {
+            if (node.children?.filter((x) => !isWhitespaceJSXText(x))?.length !== 1) {
+              return;
+            }
             const argument = container.expression.arguments[0];
             if (!argument || argument.type !== "JSXElement") {
               return;

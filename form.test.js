@@ -120,6 +120,25 @@ export default (Foo)
     {
       code: `
         <Form.Item label="a">
+          {getFieldDecorator(a.b)(<Input />)}
+          1
+        </Form.Item>
+      `,
+      errors: [{ message, type: "JSXElement" }],
+    },
+    // {
+    //   code: `
+    //     <Form.Item label="a">
+    //       <div>
+    //         {getFieldDecorator(a.b)(<Input />)}
+    //       </div>
+    //     </Form.Item>
+    //   `,
+    //   errors: [{ message, type: "JSXElement" }],
+    // },
+    {
+      code: `
+        <Form.Item label="a">
           {getFieldDecorator("memberId", {
             rules: [
               { required: true, message: '必填' },
