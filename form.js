@@ -164,6 +164,13 @@ const rule = {
             if (node.children?.filter((x) => !isWhitespaceJSXText(x))?.length !== 1) {
               return;
             }
+            if (
+              !/Form\.Item|Item|FormItem/.test(
+                context.getSourceCode().getText(node.openingElement.name)
+              )
+            ) {
+              return;
+            }
             const argument = container.expression.arguments[0];
             if (!argument || argument.type !== "JSXElement") {
               return;

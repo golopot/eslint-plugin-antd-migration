@@ -126,16 +126,16 @@ export default (Foo)
       `,
       errors: [{ message, type: "JSXElement" }],
     },
-    // {
-    //   code: `
-    //     <Form.Item label="a">
-    //       <div>
-    //         {getFieldDecorator(a.b)(<Input />)}
-    //       </div>
-    //     </Form.Item>
-    //   `,
-    //   errors: [{ message, type: "JSXElement" }],
-    // },
+    {
+      code: `
+        <Form.Item label="a">
+          <div>
+            {getFieldDecorator(a.b)(<Input />)}
+          </div>
+        </Form.Item>
+      `,
+      errors: [{ message, type: "JSXElement" }],
+    },
     {
       code: `
         <Form.Item label="a">
