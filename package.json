@@ -1,6 +1,6 @@
 {
   "name": "eslint-plugin-antd-migration",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "fix antd@3 form to antd@4 form",
   "main": "index.js",
   "scripts": {
