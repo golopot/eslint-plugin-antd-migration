@@ -27,12 +27,7 @@ const Foo = ({}) => {
 const [form] = Form.useForm();}
 export default (Foo)
 `,
-      errors: [
-        {
-          message: formMessage,
-          type: "ObjectPattern",
-        },
-      ],
+      errors: [{ message: formMessage, type: "ObjectPattern" }],
     },
     {
       code: `
@@ -44,12 +39,7 @@ function Foo({ a}) {
 const [form] = Form.useForm();}
 export default (Foo)
 `,
-      errors: [
-        {
-          message: formMessage,
-          type: "ObjectPattern",
-        },
-      ],
+      errors: [{ message: formMessage, type: "ObjectPattern" }],
     },
     {
       code: `
@@ -61,12 +51,7 @@ function Foo({}) {
 const [form] = Form.useForm();const {a,b} = form;}
 export default (Foo)
 `,
-      errors: [
-        {
-          message: formMessage,
-          type: "ObjectPattern",
-        },
-      ],
+      errors: [{ message: formMessage, type: "ObjectPattern" }],
     },
     {
       code: `
@@ -78,12 +63,7 @@ function Foo({ }) {
 const [form] = Form.useForm();const {a,b} = form;}
 export default (Foo)
 `,
-      errors: [
-        {
-          message: formMessage,
-          type: "ObjectPattern",
-        },
-      ],
+      errors: [{ message: formMessage, type: "ObjectPattern" }],
     },
     {
       code: `
@@ -96,12 +76,7 @@ export default (Foo)
           <Input />
         </Form.Item>
       `,
-      errors: [
-        {
-          message,
-          type: "JSXElement",
-        },
-      ],
+      errors: [{ message, type: "JSXElement" }],
     },
     {
       code: `
@@ -114,12 +89,7 @@ export default (Foo)
           <Input />
         </Form.Item>
       `,
-      errors: [
-        {
-          message,
-          type: "JSXElement",
-        },
-      ],
+      errors: [{ message, type: "JSXElement" }],
     },
     {
       code: `
@@ -164,12 +134,7 @@ export default (Foo)
           <Input />
         </Form.Item>
       `,
-      errors: [
-        {
-          message,
-          type: "JSXElement",
-        },
-      ],
+      errors: [{ message, type: "JSXElement" }],
     },
     {
       code: `
@@ -178,12 +143,7 @@ export default (Foo)
       output: `
         const {  getFieldValue } = form;
       `,
-      errors: [
-        {
-          message: "remove getFieldDecorator",
-          type: "Property",
-        },
-      ],
+      errors: [{ message: "remove getFieldDecorator", type: "Property" }],
     },
     {
       code: `
@@ -192,12 +152,7 @@ export default (Foo)
       output: `
         const {  } = form;
       `,
-      errors: [
-        {
-          message: "remove getFieldDecorator",
-          type: "Property",
-        },
-      ],
+      errors: [{ message: "remove getFieldDecorator", type: "Property" }],
     },
     {
       code: `
@@ -206,22 +161,12 @@ const {  } = form;
       output: `
 
       `,
-      errors: [
-        {
-          message: "remove empty form destrucutring",
-          type: "VariableDeclaration",
-        },
-      ],
+      errors: [{ message: "remove empty form destrucutring", type: "VariableDeclaration" }],
     },
     {
       code: `function f({}) {}`,
       output: `function f() {}`,
-      errors: [
-        {
-          message: "remove empty pattern",
-          type: "ObjectPattern",
-        },
-      ],
+      errors: [{ message: "remove empty pattern", type: "ObjectPattern" }],
     },
   ],
 });
