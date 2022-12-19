@@ -110,7 +110,7 @@ export default (Foo)
         </Form.Item>
       `,
       output: `
-        <Form.Item label="a" name="memberId">
+        <Form.Item label="a" name={\`memberId\`}>
           <Input />
         </Form.Item>
       `,
@@ -120,6 +120,32 @@ export default (Foo)
           type: "JSXElement",
         },
       ],
+    },
+    {
+      code: `
+        <Form.Item label="a">
+          {getFieldDecorator(\`a\${b}c\`)(<Input />)}
+        </Form.Item>
+      `,
+      output: `
+        <Form.Item label="a" name={\`a\${b}c\`}>
+          <Input />
+        </Form.Item>
+      `,
+      errors: [{ message, type: "JSXElement" }],
+    },
+    {
+      code: `
+        <Form.Item label="a">
+          {getFieldDecorator(a.b)(<Input />)}
+        </Form.Item>
+      `,
+      output: `
+        <Form.Item label="a" name={a.b}>
+          <Input />
+        </Form.Item>
+      `,
+      errors: [{ message, type: "JSXElement" }],
     },
     {
       code: `

@@ -146,6 +146,13 @@ const rule = {
         if (container.expression.callee?.callee?.name !== "getFieldDecorator") {
           return;
         }
+
+        function getNameText(node) {
+          if (node?.type === "Literal" && typeof node?.value === "string") {
+            return context.getSourceCode().getText(node);
+          }
+          return "{" + context.getSourceCode().getText(node) + "}";
+        }
         context.report({
           message: "Should upgrade getFieldDecorator to antd@4",
           node,
@@ -154,9 +161,7 @@ const rule = {
             if (!argument || argument.type !== "JSXElement") {
               return;
             }
-            const name =
-              container.expression?.callee?.arguments?.[0]?.value ||
-              container.expression?.callee?.arguments?.[0]?.quasis?.[0]?.value?.cooked;
+            const name = getNameText(container?.expression?.callee?.arguments?.[0]);
             if (!name) {
               return;
             }
@@ -179,7 +184,7 @@ const rule = {
               fixer.replaceText(
                 node.openingElement,
                 context.getSourceCode().getText(node.openingElement).slice(0, -1) +
-                  ` name="${name}"` +
+                  ` name=${name}` +
                   (props ? ` ${props}` : "") +
                   ">"
               ),
