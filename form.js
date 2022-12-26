@@ -22,7 +22,7 @@ function findFormCreate(context, node) {
 }
 
 function isWhitespaceJSXText(node) {
-  return node.type === "JSXText" && String(node.value).trim() === "";
+  return (node.type === "JSXText" || node.type === "Literal") && String(node.value).trim() === "";
 }
 
 /**

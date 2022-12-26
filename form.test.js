@@ -1,4 +1,6 @@
 const { RuleTester } = require("eslint");
+// @ts-ignore
+const path = require("path");
 const rule = require("./form");
 
 const ruleTester = new RuleTester({
@@ -89,6 +91,22 @@ export default (Foo)
           <Input />
         </Form.Item>
       `,
+      errors: [{ message, type: "JSXElement" }],
+    },
+    {
+      code: `
+        <Form.Item label="memberid">
+          {getFieldDecorator('memberId')(
+            <Input style={{ width: 200 }} />,
+          )}
+        </Form.Item>
+      `,
+      output: `
+        <Form.Item label="memberid" name='memberId'>
+          <Input style={{ width: 200 }} />
+        </Form.Item>
+      `,
+      parser: path.resolve("./node_modules/babel-eslint"),
       errors: [{ message, type: "JSXElement" }],
     },
     {
